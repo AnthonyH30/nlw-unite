@@ -29,8 +29,24 @@ interface Attendee {
 
 export function AttendeeList() {
 
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState(() => {
+    const url = new URL(window.location.toString());
+
+    if(url.searchParams.has('search')){
+      return url.searchParams.get('search') ?? '';
+    }
+
+    return ''
+  });
+  const [page, setPage] = useState(() => {
+    const url = new URL(window.location.toString());
+
+    if(url.searchParams.has('page')){
+      return Number(url.searchParams.get('page'));
+    }
+
+    return 1
+  });
   const [attendees, setAttendees] = useState<Attendee[]>([]);
   const [total, setTotal] = useState(1);
 
@@ -54,25 +70,45 @@ export function AttendeeList() {
     });
   },[page, search])
 
+  function setCurrentSearch(search: string){
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set('search', search)
+
+    window.history.pushState({}, '', url)
+
+    setSearch(search);
+  }
+
+  function setCurrentPage(page : number){
+    const url = new URL(window.location.toString());
+
+    url.searchParams.set('page', String(page))
+
+    window.history.pushState({}, '', url)
+
+    setPage(page);
+  }
+
   function onSearchInputChange(event: ChangeEvent<HTMLInputElement>){
-    setSearch(event.target.value)
-    setPage(1)
+    setCurrentSearch(event.target.value)
+    setCurrentPage(1)
   }
 
   function goToFirstPage(){
-    setPage(1)
+    setCurrentPage(1)
   }
 
   function goToLastPage(){
-    setPage(totalPages)
+    setCurrentPage(totalPages)
   }
 
   function goToNextPage(){
-    setPage((prev) => prev + 1)
+    setCurrentPage(page + 1);
   }
 
   function goToPreviousPage(){
-    setPage((prev) => prev - 1)
+    setCurrentPage(page - 1)
   }
 
   return (
@@ -86,6 +122,7 @@ export function AttendeeList() {
             placeholder="Buscar participante..."
             className="bg-transparent flex-1 outline-none border-0 p-0 text-sm focus:ring-0"
             type="text"
+            value={search}
           />
         </div>
       </div>
